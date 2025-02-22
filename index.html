@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Soundboard Grid</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            font-size: x-large;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            background-color: #222;
+            color: white;
+        }
+        .filters {
+            margin: 10px;
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 10px;
+            width: 80%;
+            /* max-width: 800px; */
+        }
+        .cell {
+            background: #444;
+            padding: 20px;
+            text-align: center;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        .cell:hover {
+            background: #666;
+        }
+        .highlight {
+            color: #FFD700; /* Gold color for highlight */
+            font-size: medium;
+        }
+    </style>
+</head>
+<body>
+    <input type="text" id="search" placeholder="Search by title..." style="margin: 20px; padding: 10px; width: 80%; max-width: 300px;">
+    <div class="grid" id="grid"></div>
+    <script>
+        const sounds = [
+        { title: "Ambient: Cavern", url: "https://open.spotify.com/playlist/7cgECSzxFYwjHugNdbur1O?si=ee124184d7ce43c4" },
+            { title: "Ambient: Forest", url: "https://open.spotify.com/playlist/5ayvxbK8CveLIj4llcibs2?si=ccee2567b35a4d84" },
+            { title: "Ambient: Mystical", url: "https://open.spotify.com/playlist/47JbzbE2fpng1VU0VeufGU?si=74810fe87a96467c" },
+            { title: "Ambient: Mountain Pass", url: "https://open.spotify.com/playlist/4y88W8yD8M32PJ4ZNJVzAp?si=399238623a46467f" },
+            { title: "Ambient: Ocean", url: "https://open.spotify.com/playlist/0czhzWKJ1qoC9iHH5yN93a?si=d9550ba1738848b9" },
+            { title: "Ambient: Storm", url: "https://open.spotify.com/playlist/3lQ1VrIoMDHJmw52N3uAEc?si=c0cdd3c154df4f8a" },
+            { title: "Atmosphere: The Capital", url: "https://open.spotify.com/playlist/2t5TWAPs6HYuJ3xbpjHYpx?si=00e7bb25b8ca4608" },
+            { title: "Atmosphere: The Cathedral", url: "https://open.spotify.com/playlist/0IyMP3izyM2jbYgJLydB00?si=7ea0213f88ea406f" },
+            { title: "Atmosphere: The Desert", url: "https://open.spotify.com/playlist/4yguXksZpqOW10hpuDyB5A?si=de4cfc5944ab436c" },
+            { title: "Atmosphere: The Dungeon", url: "https://open.spotify.com/playlist/64UCYVCIPtZiOP2zEodORk?si=ced294c4c23c4da4" },
+            { title: "Atmosphere: The Fey", url: "https://open.spotify.com/playlist/4jPscCOA5zrheXibHnmlU1?si=cfe85f5de59e4aac" },
+            { title: "Atmosphere: The Manor", url: "https://open.spotify.com/playlist/6QzZjlzHxNUo9N6E19RKpJ?si=0b3c5dddcb9242c1" },
+            { title: "Atmosphere: The Open Sea", url: "https://open.spotify.com/playlist/7itI76ZXcUbIHnmsT4TfHG?si=e2aec01b90a1427a" },
+            { title: "Atmosphere: The Road", url: "https://open.spotify.com/playlist/0gZQWj0PjC6t2bgmroHaaW?si=6feb76f9705e47f5" },
+            { title: "Atmosphere: The Saloon", url: "https://open.spotify.com/playlist/73YmiE2tLNG5VbNF7oGmSn?si=917a5fef8a0843a3" },
+            { title: "Atmosphere: The Swamp", url: "https://open.spotify.com/playlist/2xA9EIpuBH5DbmGHszQtvk?si=cd9547020f764e2d" },
+            { title: "Atmosphere: The Tavern", url: "https://open.spotify.com/playlist/2StSwZk9mV2DNO3aucMZYx?si=2e71143d94084cf3" },
+            { title: "Atmosphere: The Town", url: "https://open.spotify.com/playlist/5GgU8cLccECwAvjDCGhYjj?si=8ba8c7745115470b" },
+            { title: "Atmosphere: The Underdark", url: "https://open.spotify.com/playlist/5Qhtamj9NCxluijLnQ4edN?si=e20b1fdaebf241e0" },
+            { title: "Atmosphere: The Wild", url: "https://open.spotify.com/playlist/5r2AkNQOITXRqVWqYj40QG?si=68d2258905c64f6a" },
+            { title: "Combat: Boss", url: "https://open.spotify.com/playlist/0Q6hJZYIEu3LwbyBBHjjHo?si=2e87ed77e3f54336" },
+            { title: "Combat: Duel", url: "https://open.spotify.com/playlist/5g9ZZ9Ogml8NsjOlv8N31t?si=bc168eb873424f71" },
+            { title: "Combat: Epic", url: "https://open.spotify.com/playlist/4Anyq806DQpd7pRZbSADUr?si=0fa1724ca0fc42bb" },
+            { title: "Combat: Horrifying", url: "https://open.spotify.com/playlist/1SbeUQZbRHyUEIr6wsoD4q?si=4dc36c9df5fa443d" },
+            { title: "Combat: Nautical", url: "https://open.spotify.com/playlist/5glp5dmEK7nixsLnjHk59x?si=e3336062def04005" },
+            { title: "Combat: Standard", url: "https://open.spotify.com/playlist/0bWUBjlr7O4troJKyyMVbD?si=19aa379b349c480d" },
+            { title: "Combat: Tough", url: "https://open.spotify.com/playlist/6T0UOAmlbWb29y2fIETtL2?si=6c9d28cd3ab4461b" },
+            { title: "Mood: Setting out", url: "https://open.spotify.com/playlist/36DeGHOGg7eH0vUnysRaOx?si=faee7cd9b1044045" },
+            { title: "Mood: Creepy", url: "https://open.spotify.com/playlist/6nSstCQcmzcEUSx8gBrcek?si=7ee3759662f14686" },
+            { title: "Mood: Denouncement", url: "https://open.spotify.com/playlist/71AETM4dyul7BDNYE9zVBv?si=3317da57e84b4dcb" },
+            { title: "Mood: Joyful", url: "https://open.spotify.com/playlist/6KbY8nK4vdGO0zaSuoXEFr?si=0496a64a34ab41e3" },
+            { title: "Mood: Mysterious", url: "https://open.spotify.com/playlist/28ICiQDK37yaahRZD7aX3J?si=7b153556ef2f44f5" },
+            { title: "Mood: Ominous", url: "https://open.spotify.com/playlist/71yNeiFbb8bDhgLIzu9eae?si=aa759131935c47e2" },
+            { title: "Mood: Plesant", url: "https://open.spotify.com/playlist/3O4DGo9DS5kzUUJo6EQYdp?si=537f1699cf344b0e" },
+            { title: "Mood: Ridiculous", url: "https://open.spotify.com/playlist/3VepfFpcPxHIL7WyKYFdGI?si=d056e01d4cd94ea1" },
+            { title: "Mood: Serious", url: "https://open.spotify.com/playlist/3LNrO4Jvwtzk2QD1gR8ccZ?si=7cadaf80ba594560" },
+            { title: "Mood: Somber", url: "https://open.spotify.com/playlist/5N5w6WFXigWqZMLzVo6rdh?si=5df24a30868b4b4e" },
+            { title: "Mood: Tense", url: "https://open.spotify.com/playlist/4DYALPIektzP4vVdZFlHNe?si=f920ff182a384304" },
+            { title: "Mood: Triumphant", url: "https://open.spotify.com/playlist/1ALzSDT8MfYQ7Xams9Nx16?si=a9afa12c6c3f4835" },
+            { title: "Setting: Bariovia", url: "https://open.spotify.com/playlist/1Pw2cdOxeDBgIsocUWQYyD?si=604cc7e590be4948" },
+            { title: "Setting: Cyberpunk", url: "https://open.spotify.com/playlist/3q2iJdKM6MqKkZoRKMtti4?si=6cb18929c81a4ebc" },
+            { title: "Setting: Film Noir", url: "https://open.spotify.com/playlist/3nn0rP52rqL4Af3GGkwtmZ?si=97984b5af34e4361" },
+            { title: "Setting: Urban Fantasy", url: "https://open.spotify.com/playlist/5X5eFLCgVX4UKMZqxWFztP?si=e13b240f359d440d" },
+            { title: "Situation: Chase", url: "https://open.spotify.com/playlist/1TXWTHKaWNQij6K9Ldn6fU?si=2caf7563965b469e" },
+            { title: "Situation: Stealth", url: "https://open.spotify.com/playlist/6GdFG0fgrJLSXSlEkF6iM0?si=437a2ae9650541f3" },
+            { title: "[CoS] Svalich Woods", url: "https://www.youtube.com/watch?v=eePl-I8heFc&list=PLHEmO3yycE8rmaxTJ3V8X_6Pu-crA_ofo" },
+            { title: "[CoS] Death House", url: "https://www.youtube.com/watch?v=GOTyzCntzJo&list=PLHEmO3yycE8rmaxTJ3V8X_6Pu-crA_ofo&index=2" },
+            { title: "[CoS] Village of Barovia", url: "https://www.youtube.com/watch?v=nnEGIH1mXwI&list=PLHEmO3yycE8rmaxTJ3V8X_6Pu-crA_ofo&index=4" },
+            { title: "[CoS] Town Of Vallaki", url: "https://www.youtube.com/watch?v=2UPkwe_5p_w&list=PLHEmO3yycE8rmaxTJ3V8X_6Pu-crA_ofo&index=5" },
+            { title: "[CoS] Old Bonegrinder", url: "https://www.youtube.com/watch?v=J63qJ_GFV_k&list=PLHEmO3yycE8rmaxTJ3V8X_6Pu-crA_ofo&index=6" },
+            { title: "[CoS] Argynvostholt", url: "https://www.youtube.com/watch?v=K08IQhgXDWQ&list=PLHEmO3yycE8rmaxTJ3V8X_6Pu-crA_ofo&index=7" },
+            { title: "[CoS] Castle Ravenloft", url: "https://www.youtube.com/watch?v=rfA-pzDkERs&list=PLHEmO3yycE8rmaxTJ3V8X_6Pu-crA_ofo&index=8" },
+            { title: "[CoS] Catacombs", url: "https://www.youtube.com/watch?v=WPpVMmTt74Q&list=PLHEmO3yycE8rmaxTJ3V8X_6Pu-crA_ofo&index=9" },
+            { title: "[CoS] Village of Krezk", url: "https://www.youtube.com/watch?v=ZRnLm7BJMnw&list=PLHEmO3yycE8rmaxTJ3V8X_6Pu-crA_ofo&index=10" },
+            { title: "[CoS] Abbey of St Markovia", url: "https://www.youtube.com/watch?v=8AODR94oNMo&list=PLHEmO3yycE8rmaxTJ3V8X_6Pu-crA_ofo&index=11" },
+            { title: "[CoS] Madhouse", url: "https://www.youtube.com/watch?v=1gDfJHT5n0U&list=PLHEmO3yycE8rmaxTJ3V8X_6Pu-crA_ofo&index=12" },
+            { title: "[CoS] Van Richten's Tower", url: "https://www.youtube.com/watch?v=1u7rJTtlbKw&list=PLHEmO3yycE8rmaxTJ3V8X_6Pu-crA_ofo&index=14" },
+            { title: "[CoS] Ruins of Berez", url: "https://www.youtube.com/watch?v=9MsH9vN1aFQ&list=PLHEmO3yycE8rmaxTJ3V8X_6Pu-crA_ofo&index=15" },
+            { title: "[CoS] Wizard Of The Wines", url: "https://www.youtube.com/watch?v=4hT8zvR-nkg&list=PLHEmO3yycE8rmaxTJ3V8X_6Pu-crA_ofo&index=16" },
+            { title: "[CoS] Amber Temple", url: "https://www.youtube.com/watch?v=Dd91LPwFAMk&list=PLHEmO3yycE8rmaxTJ3V8X_6Pu-crA_ofo&index=17" },
+            { title: "[CoS] Mists of Ravenloft", url: "https://www.youtube.com/watch?v=J41ipvUvIzI&list=PLHEmO3yycE8rmaxTJ3V8X_6Pu-crA_ofo&index=18" },
+            { title: "[Icewind Dale] Ice Temple | Fantasy Ambience", url: "https://www.youtube.com/watch?v=569cwo9GX-w&list=PLbHUA-o_5dgJlrsyEKIJ3g18xghY8Bewn" },
+            { title: "[Icewind Dale] Frozen Tundra | Arctic Ambience", url: "https://www.youtube.com/watch?v=RhvyGiJs120&list=PLbHUA-o_5dgJlrsyEKIJ3g18xghY8Bewn&index=2" },
+            { title: "[Icewind Dale] Blizzard | Winter Ambience", url: "https://www.youtube.com/watch?v=cpGgQHAublY&list=PLbHUA-o_5dgJlrsyEKIJ3g18xghY8Bewn&index=3" },
+            { title: "[Icewind Dale] Snowing ❄ | Winter Ambience", url: "https://www.youtube.com/watch?v=KIXySk4GId0&list=PLbHUA-o_5dgJlrsyEKIJ3g18xghY8Bewn&index=4" },
+            { title: "[Icewind Dale] Dark Ice Fortress | Danger, Mystery, Ominous Ambience", url: "https://www.youtube.com/watch?v=7S4an5Et6Oc&list=PLbHUA-o_5dgJlrsyEKIJ3g18xghY8Bewn&index=5" },
+            { title: "[Icewind Dale] Icy Cave | Arctic Ambience", url: "https://www.youtube.com/watch?v=zNtAfmKP3CA&list=PLbHUA-o_5dgJlrsyEKIJ3g18xghY8Bewn&index=6" },
+            { title: "[Icewind Dale] Mountain Shelter | Adventure Ambience", url: "https://www.youtube.com/watch?v=3mNs2IdWuZY&list=PLbHUA-o_5dgJlrsyEKIJ3g18xghY8Bewn&index=7" },
+            { title: "[Icewind Dale] Ten Towns | Isolated Village Ambience", url: "https://www.youtube.com/watch?v=7_jUag-2mzU&list=PLbHUA-o_5dgJlrsyEKIJ3g18xghY8Bewn&index=8" },
+            { title: "[Icewind Dale] Blizzard Campfire | Exploration, Relaxing Ambience", url: "https://www.youtube.com/watch?v=2Qwirzv90Ek&list=PLbHUA-o_5dgJlrsyEKIJ3g18xghY8Bewn&index=9" },
+            { title: "[Icewind Dale] Cold Cave | Wind, Nature Ambience", url: "https://www.youtube.com/watch?v=ZPYGLf6T9Hs&list=PLbHUA-o_5dgJlrsyEKIJ3g18xghY8Bewn&index=10" },
+            { title: "Taiga | Cold Forests, Skyrim", url: "https://www.youtube.com/watch?v=J4yp3l0EZPQ&list=PLbHUA-o_5dgJlrsyEKIJ3g18xghY8Bewn&index=11" },
+            { title: "[Icewind Dale] Frozen Coast | Exploration Ambience", url: "https://www.youtube.com/watch?v=Y2yT3vH8x7M&list=PLbHUA-o_5dgJlrsyEKIJ3g18xghY8Bewn&index=12" },
+            { title: "Lively Tundra | Nature Ambience", url: "https://www.youtube.com/watch?v=xJN2COqmLg4&list=PLbHUA-o_5dgJlrsyEKIJ3g18xghY8Bewn&index=13" },
+            { title: "[Icewind Dale] Frozen Tundra Campfire | Exploration Ambience", url: "https://www.youtube.com/watch?v=4EZpX881Cl4&list=PLbHUA-o_5dgJlrsyEKIJ3g18xghY8Bewn&index=14" },
+            { title: "[Icewind Dale] Ice Dragon Lair | Adventure Ambience", url: "https://www.youtube.com/watch?v=__Q5n1AevvA&list=PLbHUA-o_5dgJlrsyEKIJ3g18xghY8Bewn&index=15" },
+            { title: "[Icewind Dale] Winter River | Nature Ambience", url: "https://www.youtube.com/watch?v=MuLvg7a31OA&list=PLbHUA-o_5dgJlrsyEKIJ3g18xghY8Bewn&index=16" },
+            { title: "[Icewind Dale] Lively Tundra Campfire | Relaxing Ambience", url: "https://www.youtube.com/watch?v=ZzWvIFyYT48&list=PLbHUA-o_5dgJlrsyEKIJ3g18xghY8Bewn&index=17" }
+        ];
+
+
+        const grid = document.getElementById("grid");
+        const searchInput = document.getElementById("search");
+
+        function renderGrid() {
+            grid.innerHTML = "";
+            const searchText = searchInput.value.toLowerCase();
+
+            sounds
+                .filter(sound => sound.title.toLowerCase().includes(searchText))
+                .forEach(sound => {
+                    const cell = document.createElement("div");
+                    cell.className = "cell";
+                    cell.innerHTML = formatTitle(sound.title);
+                    cell.onclick = () => window.open(sound.url, "_blank");
+                    grid.appendChild(cell);
+                });
+        }
+
+        function formatTitle(title) {
+            return title.replace(/\[(.*?)\]/g, '<span class="highlight">$1<br/></span>');
+        }
+
+        searchInput.addEventListener("input", renderGrid);
+
+        renderGrid();
+    </script>
+</body>
+</html>
